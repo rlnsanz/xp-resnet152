@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils import data as torchdata
-import torchvision
-import torchvision.transforms as transforms
 
 from transformers import AutoFeatureExtractor, ResNetForImageClassification
 from datasets import load_dataset, DatasetDict
@@ -12,7 +10,7 @@ from datasets import load_dataset, DatasetDict
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyper-parameters
-num_epochs = 5
+num_epochs = 0
 batch_size = 8
 learning_rate = 0.001
 
@@ -20,10 +18,6 @@ learning_rate = 0.001
 data = load_dataset("imagenet-1k")
 assert isinstance(data, DatasetDict)
 assert set(data.keys()) == {"train", "validation", "test"}  # type: ignore
-
-
-randcrop = transforms.RandomResizedCrop((256, 256))
-randcrop.to(device)
 
 feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-152")
 model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(device)  # type: ignore
@@ -66,15 +60,14 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 # Train the model
 total_step = len(train_loader)
 for epoch in range(num_epochs):
+    model.train()
     for i, batch in enumerate(train_loader):
         # Move tensors to the configured device
         images = batch["image"].to(device)
         labels = batch["label"].to(device)
 
         # Forward pass
-        print('before model')
         outputs = model(images)
-        print('after model', str(outputs))
         loss = criterion(outputs.logits, labels)
 
         # Backward and optimize
@@ -88,22 +81,34 @@ for epoch in range(num_epochs):
                     epoch + 1, num_epochs, i + 1, total_step, loss.item()
                 )
             )
-        import sys
 
-        sys.exit(0)
+    model.eval()
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for batch in val_loader:
+            ...
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
+model.eval()
 with torch.no_grad():
     correct = 0
     total = 0
-    for images, labels in test_loader:
-        images = images.reshape(-1, 28 * 28).to(device)
-        labels = labels.to(device)
+    print(f"evaluating for {len(val_loader)} rounds")
+    for i, batch in enumerate(val_loader):
+        # Move tensors to the configured device
+        images = batch["image"].to(device)
+        labels = batch["label"].to(device)
+
+        # Forward pass
         outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
+        left, predicted = torch.max(outputs.logits, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
+
+        if i % 100 == 0:
+            print(i, correct, total)
 
     print(
         "Accuracy of the network on the 10000 test images: {} %".format(
