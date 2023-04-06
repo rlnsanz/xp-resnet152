@@ -13,7 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyper-parameters
 num_epochs = 5
-batch_size = 64
+batch_size = 8
 learning_rate = 0.001
 
 # Data loader
@@ -32,26 +32,26 @@ model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(
 def my_collate(batch):
     new_batch = []
     for i, record in enumerate(batch):
-        im = record["image"]
-        # print(i, len(im.shape))
-        if len(im.shape) == 3:
-            h, w, c = im.shape
-            im = im.reshape((3, h, w))
-        elif len(im.shape) == 2:
-            h, w = im.shape
-            im = im.reshape((1, h, w))
+        if len(record["image"].shape) == 3:
+            h, w, c = record["image"].shape
+            im = record["image"].reshape((3, h, w))
+        elif len(record["image"].shape) == 2:
+            h, w = record["image"].shape
+            im = record["image"].reshape((1, h, w))
             im = im.repeat(3, 1, 1)
         else:
             raise
+
+        im = feature_extractor(im, return_tensors="pt")["pixel_values"]
         new_batch.append(
             {
                 "label": record["label"],
-                "image": feature_extractor(im, return_tensors="pt"),
+                "image": im,
             }
         )
 
     out = torchdata.default_collate(new_batch)
-    print("called collate")
+    out["image"] = out["image"].reshape(batch_size, 3, 224, 224)
     return out
 
 
@@ -72,8 +72,10 @@ for epoch in range(num_epochs):
         labels = batch["label"].to(device)
 
         # Forward pass
-        outputs = model(**images)
-        loss = criterion(outputs, labels)
+        print('before model')
+        outputs = model(images)
+        print('after model', str(outputs))
+        loss = criterion(outputs.logits, labels)
 
         # Backward and optimize
         optimizer.zero_grad()
@@ -87,6 +89,7 @@ for epoch in range(num_epochs):
                 )
             )
         import sys
+
         sys.exit(0)
 
 # Test the model
