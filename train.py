@@ -24,7 +24,7 @@ assert set(data.keys()) == {"train", "validation", "test"}  # type: ignore
 
 feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-152")
 model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(device)  # type: ignore
-Flor.checkpoints(feature_extractor, model)
+Flor.checkpoints(model)
 
 
 def my_collate(batch):
