@@ -10,7 +10,7 @@ from datasets import load_dataset, DatasetDict
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyper-parameters
-num_epochs = 0
+num_epochs = 5
 batch_size = 8
 learning_rate = 0.001
 
@@ -49,9 +49,9 @@ def my_collate(batch):
     return out
 
 
-train_loader = torchdata.DataLoader(dataset=data["train"].with_format("torch"), batch_size=batch_size, shuffle=True, collate_fn=my_collate)  # type: ignore
-val_loader = torchdata.DataLoader(dataset=data["validation"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
-test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
+train_loader = torchdata.DataLoader(dataset=data["train"].with_format("torch"), batch_size=batch_size, shuffle=True, collate_fn=my_collate, num_workers=4)  # type: ignore
+val_loader = torchdata.DataLoader(dataset=data["validation"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate, num_workers=4)  # type: ignore
+test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate, num_workers=4)  # type: ignore
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -75,19 +75,42 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-        if (i + 1) % 100 == 0:
+        if i % 100 == 0:
             print(
                 "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i + 1, total_step, loss.item()
+                    epoch + 1, num_epochs, i, 1000, loss.item()
                 )
             )
+            if i == 1000:
+                # bootleg sampling
+                break
 
     model.eval()
     with torch.no_grad():
         correct = 0
         total = 0
-        for batch in val_loader:
-            ...
+        print(f"evaluating for 1000 rounds")
+        for i, batch in enumerate(val_loader):
+            # Move tensors to the configured device
+            images = batch["image"].to(device)
+            labels = batch["label"].to(device)
+
+            # Forward pass
+            outputs = model(images)
+            left, predicted = torch.max(outputs.logits, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+            if i % 100 == 0:
+                print(i, correct, total)
+                if i == 1000:
+                    break
+
+        print(
+            "Accuracy of the network on the 8000 test images: {} %".format(
+                100 * correct / total
+            )
+        )
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -111,7 +134,5 @@ with torch.no_grad():
             print(i, correct, total)
 
     print(
-        "Accuracy of the network on the 10000 test images: {} %".format(
-            100 * correct / total
-        )
+        f"Accuracy of the network on the {len(val_loader) * batch_size} test images: {100 * correct / total}"
     )
