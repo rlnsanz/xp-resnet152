@@ -25,25 +25,28 @@ assert set(data.keys()) == {"train", "validation", "test"}  # type: ignore
 randcrop = transforms.RandomResizedCrop((256, 256))
 randcrop.to(device)
 
+feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-152")
+model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(device)  # type: ignore
+
 
 def my_collate(batch):
     new_batch = []
     for i, record in enumerate(batch):
         im = record["image"]
-        print(i, len(im.shape))
+        # print(i, len(im.shape))
         if len(im.shape) == 3:
             h, w, c = im.shape
-            im = im.to(device).reshape((3, h, w))
+            im = im.reshape((3, h, w))
         elif len(im.shape) == 2:
             h, w = im.shape
-            im = im.to(device).reshape((1, h, w))
+            im = im.reshape((1, h, w))
             im = im.repeat(3, 1, 1)
         else:
             raise
         new_batch.append(
             {
                 "label": record["label"],
-                "image": randcrop(im),
+                "image": feature_extractor(im, return_tensors="pt"),
             }
         )
 
@@ -56,10 +59,6 @@ train_loader = torchdata.DataLoader(dataset=data["train"].with_format("torch"), 
 val_loader = torchdata.DataLoader(dataset=data["validation"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
 test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
 
-feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-152")
-model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(device)  # type: ignore
-
-
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -69,15 +68,11 @@ total_step = len(train_loader)
 for epoch in range(num_epochs):
     for i, batch in enumerate(train_loader):
         # Move tensors to the configured device
-        print(batch)
-        import sys
-
-        sys.exit(0)
-        images = images.reshape(-1, 28 * 28).to(device)
-        labels = labels.to(device)
+        images = batch["image"].to(device)
+        labels = batch["label"].to(device)
 
         # Forward pass
-        outputs = model(images)
+        outputs = model(**images)
         loss = criterion(outputs, labels)
 
         # Backward and optimize
@@ -91,6 +86,8 @@ for epoch in range(num_epochs):
                     epoch + 1, num_epochs, i + 1, total_step, loss.item()
                 )
             )
+        import sys
+        sys.exit(0)
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
