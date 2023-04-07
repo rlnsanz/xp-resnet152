@@ -13,7 +13,7 @@ from flor import MTK as Flor
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyper-parameters
-num_epochs = 5
+num_epochs = 2
 batch_size = 8
 learning_rate = 0.001
 
@@ -53,9 +53,9 @@ def my_collate(batch):
     return out
 
 
-train_loader = torchdata.DataLoader(dataset=data["train"].with_format("torch"), batch_size=batch_size, shuffle=True, collate_fn=my_collate, num_workers=4)  # type: ignore
-val_loader = torchdata.DataLoader(dataset=data["validation"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate, num_workers=4)  # type: ignore
-test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate, num_workers=4)  # type: ignore
+train_loader = torchdata.DataLoader(dataset=data["train"].with_format("torch"), batch_size=batch_size, shuffle=True, collate_fn=my_collate)  # type: ignore
+val_loader = torchdata.DataLoader(dataset=data["validation"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
+test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), batch_size=batch_size, shuffle=False, collate_fn=my_collate)  # type: ignore
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -64,6 +64,7 @@ Flor.checkpoints(optimizer)
 
 # Train the model
 total_step = len(train_loader)
+num_steps = 1000
 for epoch in Flor.loop(range(num_epochs)):
     model.train()
     for i, batch in Flor.loop(enumerate(train_loader)):
@@ -83,10 +84,10 @@ for epoch in Flor.loop(range(num_epochs)):
         if i % 100 == 0:
             print(
                 "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i, 1000, flor.log("loss", loss.item())
+                    epoch + 1, num_epochs, i, num_steps, flor.log("loss", loss.item())
                 )
             )
-            if i == 1000:
+            if i == num_steps:
                 # bootleg sampling
                 break
 
