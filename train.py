@@ -13,9 +13,9 @@ from flor import MTK as Flor
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyper-parameters
-num_epochs = 2
-batch_size = 8
-learning_rate = 0.001
+num_epochs = flor.arg('epochs', default=2)
+batch_size = flor.arg('batch_size', 8)
+learning_rate = flor.arg('lr', 0.001)
 
 # Data loader
 data = load_dataset("imagenet-1k")
