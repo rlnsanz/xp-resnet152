@@ -87,36 +87,6 @@ for epoch in Flor.loop(range(num_epochs)):
                     epoch + 1, num_epochs, i, num_steps, flor.log("loss", loss.item())
                 )
             )
-            # if i == num_steps:
-            #     # bootleg sampling
-            #     break
-
-    # model.eval()
-    # with torch.no_grad():
-    #     correct = 0
-    #     total = 0
-    #     print(f"evaluating for 1000 rounds")
-    #     for i, batch in enumerate(val_loader):
-    #         # Move tensors to the configured device
-    #         images = batch["image"].to(device)
-    #         labels = batch["label"].to(device)
-
-    #         # Forward pass
-    #         outputs = model(images)
-    #         left, predicted = torch.max(outputs.logits, 1)
-    #         total += labels.size(0)
-    #         correct += (predicted == labels).sum().item()
-
-    #         if i % 100 == 0:
-    #             print(i, correct, total)
-    #             if i == 1000:
-    #                 break
-
-    #     print(
-    #         "Accuracy of the network on the 8000 test images: {} %".format(
-    #             flor.log("val_acc", 100 * correct / total)
-    #         )
-    #     )
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
