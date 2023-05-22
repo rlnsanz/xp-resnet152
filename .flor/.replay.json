@@ -1,7 +1,11 @@
 {
-    "NAME": "debugRun",
-    "TSTAMP": "2023-04-07T03:41:40.json",
-    "acc": 0.52,
-    "PROJID": "xp-resnet152_flor.shadow.sandbox",
-    "EPOCHS": 2
+    "NAME": "DEBUG",
+    "TSTAMP": "2023-05-22T17:23:37.json",
+    "epochs": 2,
+    "batch_size": 8,
+    "lr": 0.001,
+    "acc": 0.654,
+    "PROJID": "xp-resnet152_flor.shadow.sigmod",
+    "EPOCHS": 2,
+    "CLI": {}
 }

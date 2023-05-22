@@ -32,7 +32,7 @@ def my_collate(batch):
     for i, record in enumerate(batch):
         if len(record["image"].shape) == 3:
             h, w, c = record["image"].shape
-            im = record["image"].reshape((3, h, w))
+            im = record["image"].reshape((c, h, w))
         elif len(record["image"].shape) == 2:
             h, w = record["image"].shape
             im = record["image"].reshape((1, h, w))
@@ -49,7 +49,7 @@ def my_collate(batch):
         )
 
     out = torchdata.default_collate(new_batch)
-    out["image"] = out["image"].reshape(batch_size, 3, 224, 224)
+    out["image"] = out["image"].reshape(batch_size, -1, 224, 224)
     return out
 
 
@@ -64,8 +64,7 @@ Flor.checkpoints(optimizer)
 
 # Train the model
 total_step = len(train_loader)
-num_steps = 1000
-for epoch in Flor.loop(range(num_epochs)):
+for epoch in Flor.loop(range(2, 4)):
     model.train()
     for i, batch in Flor.loop(enumerate(train_loader)):
         # Move tensors to the configured device
@@ -84,9 +83,11 @@ for epoch in Flor.loop(range(num_epochs)):
         if i % 100 == 0:
             print(
                 "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i, num_steps, flor.log("loss", loss.item())
+                    epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
+            if i >= 300:
+                break
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
