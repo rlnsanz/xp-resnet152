@@ -64,7 +64,7 @@ Flor.checkpoints(optimizer)
 
 # Train the model
 total_step = len(train_loader)
-for epoch in Flor.loop(range(2, 4)):
+for epoch in Flor.loop(range(num_epochs)):
     model.train()
     for i, batch in Flor.loop(enumerate(train_loader)):
         # Move tensors to the configured device
