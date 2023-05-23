@@ -49,7 +49,7 @@ def my_collate(batch):
         )
 
     out = torchdata.default_collate(new_batch)
-    out["image"] = out["image"].reshape(batch_size, -1, 224, 224)
+    out["image"] = out["image"].reshape(-1, 3, 224, 224)
     return out
 
 
