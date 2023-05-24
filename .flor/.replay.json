@@ -1,12 +1,13 @@
 {
-    "NAME": "FLORIMPLEMENT",
-    "TSTAMP": "2023-05-24T16:39:08.json",
-    "acc": 11.526,
-    "PROJID": "xp-resnet152_flor.shadow.mybranch",
-    "EPOCHS": 2,
+    "NAME": "BATCH",
+    "TSTAMP": "2023-05-24T17:27:49.json",
+    "acc": 1.716,
+    "PROJID": "xp-resnet152_flor.shadow.sigmod",
+    "EPOCHS": 10,
     "CLI": {
-        "epochs": "2",
-        "batch_size": "32",
-        "lr": "0.001"
+        "epochs": "10",
+        "batch_size": "4",
+        "lr": "1e-06",
+        "weight_decay": "0.0001"
     }
 }
