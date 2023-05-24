@@ -59,7 +59,9 @@ test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), ba
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(
+    model.parameters(), lr=learning_rate, weight_decay=flor.arg("weight_decay", 1e-4)
+)
 Flor.checkpoints(optimizer)
 
 # Train the model
@@ -86,7 +88,7 @@ for epoch in Flor.loop(range(num_epochs)):
                     epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
-            if i >= 1000:
+            if i >= flor.arg("step_cap", 1000):
                 break
 
 # Test the model
