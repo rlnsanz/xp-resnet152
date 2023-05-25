@@ -1,12 +1,12 @@
 {
     "NAME": "BATCH",
-    "TSTAMP": "2023-05-25T08:51:00.json",
+    "TSTAMP": "2023-05-25T09:19:52.json",
     "PROJID": "xp-resnet152_flor.shadow.sigmod",
-    "EPOCHS": 8,
+    "EPOCHS": 3,
     "CLI": {
         "epochs": "10",
         "batch_size": "12",
         "lr": "1e-06",
-        "weight_decay": "0.0001"
+        "weight_decay": "1e-05"
     }
 }
