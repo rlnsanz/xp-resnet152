@@ -88,8 +88,10 @@ for epoch in Flor.loop(range(num_epochs)):
                     epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
+            flor.log("dp_i", i)
             if i >= flor.arg("step_cap", 1000):
                 break
+    flor.log("dp", epoch)
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -115,3 +117,4 @@ with torch.no_grad():
     print(
         f"Accuracy of the network on the {len(val_loader) * batch_size} test images: {flor.log('acc', 100 * correct / total)}"
     )
+    flor.log("dp_str")
