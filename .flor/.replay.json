@@ -1,7 +1,11 @@
 {
-    "NAME": "0/1",
-    "TSTAMP": "2023-07-10T12:14:56.json",
-    "PROJID": "xp-resnet152_flor.shadow.sandbox",
+    "NAME": "firstRun",
+    "TSTAMP": "2023-07-10T12:38:50.json",
+    "device": "cuda",
+    "epochs": 2,
+    "batch_size": 8,
+    "lr": 0.001,
+    "PROJID": "xp-resnet152_flor.shadow.legion",
     "EPOCHS": 1,
     "CLI": {}
 }
