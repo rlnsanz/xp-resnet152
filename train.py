@@ -85,7 +85,7 @@ for epoch in Flor.loop(range(num_epochs)):
         if i % 100 == 0:
             print(
                 "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i, num_steps, flor.log("loss", loss.item())
+                    epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
 
