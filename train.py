@@ -88,6 +88,8 @@ for epoch in Flor.loop(range(num_epochs)):
                     epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
+        if i >= flor.arg('step_cap', 20000):
+            break
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
