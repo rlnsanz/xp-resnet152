@@ -10,12 +10,12 @@ import flor
 from flor import MTK as Flor
 
 # Device configuration
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = flor.arg('device', torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 # Hyper-parameters
-num_epochs = flor.arg("epochs", default=2)
-batch_size = flor.arg("batch_size", 8)
-learning_rate = flor.arg("lr", 0.001)
+num_epochs = flor.arg('epochs', 2)
+batch_size = flor.arg('batch_size', 8)
+learning_rate = flor.arg('lr', 0.001)
 
 # Data loader
 data = load_dataset("imagenet-1k")
@@ -32,7 +32,7 @@ def my_collate(batch):
     for i, record in enumerate(batch):
         if len(record["image"].shape) == 3:
             h, w, c = record["image"].shape
-            im = record["image"].reshape((c, h, w))
+            im = record["image"].reshape((3, h, w))
         elif len(record["image"].shape) == 2:
             h, w = record["image"].shape
             im = record["image"].reshape((1, h, w))
@@ -49,7 +49,7 @@ def my_collate(batch):
         )
 
     out = torchdata.default_collate(new_batch)
-    out["image"] = out["image"].reshape(-1, 3, 224, 224)
+    out["image"] = out["image"].reshape(batch_size, 3, 224, 224)
     return out
 
 
@@ -83,11 +83,9 @@ for epoch in Flor.loop(range(num_epochs)):
         if i % 100 == 0:
             print(
                 "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
+                    epoch + 1, num_epochs, i, num_steps, flor.log("loss", loss.item())
                 )
             )
-            if i >= 1000:
-                break
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
