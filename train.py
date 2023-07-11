@@ -10,12 +10,14 @@ import flor
 from flor import MTK as Flor
 
 # Device configuration
-device = flor.arg('device', torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+device = flor.arg(
+    "device", torch.device("cuda" if torch.cuda.is_available() else "cpu")
+)
 
 # Hyper-parameters
-num_epochs = flor.arg('epochs', 2)
-batch_size = flor.arg('batch_size', 8)
-learning_rate = flor.arg('lr', 0.001)
+num_epochs = flor.arg("epochs", 2)
+batch_size = flor.arg("batch_size", 8)
+learning_rate = flor.arg("lr", 0.001)
 
 # Data loader
 data = load_dataset("imagenet-1k")
@@ -88,7 +90,7 @@ for epoch in Flor.loop(range(num_epochs)):
                     epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
                 )
             )
-        if i >= flor.arg('step_cap', 20000):
+        if i >= flor.arg("step_cap", 20000):
             break
 
 # Test the model
@@ -97,7 +99,8 @@ model.eval()
 with torch.no_grad():
     correct = 0
     total = 0
-    print(f"evaluating for {len(val_loader)} rounds")
+    step_cap = flor.arg("eval_step_cap", 1000)
+    print(f"evaluating for {step_cap} of {len(val_loader)} rounds")
     for i, batch in enumerate(val_loader):
         # Move tensors to the configured device
         images = batch["image"].to(device)
@@ -111,6 +114,9 @@ with torch.no_grad():
 
         if i % 100 == 0:
             print(i, correct, total)
+
+        if i >= step_cap:
+            break
 
     print(
         f"Accuracy of the network on the {len(val_loader) * batch_size} test images: {flor.log('acc', 100 * correct / total)}"
