@@ -37,15 +37,20 @@ model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(
 def my_collate(batch):
     new_batch = []
     for i, record in enumerate(batch):
-        if len(record["image"].shape) == 3:
+        if len(record["image"].shape) == 3:  # Already in (H, W, C)
             h, w, c = record["image"].shape
-            im = record["image"].reshape((3, h, w))
-        elif len(record["image"].shape) == 2:
+            assert c == 3, f"Unexpected channel count: {c}"
+            im = record["image"].permute(2, 0, 1)  # Convert to (C, H, W)
+        elif len(record["image"].shape) == 2:  # Grayscale image (H, W)
             h, w = record["image"].shape
-            im = record["image"].reshape((1, h, w))
-            im = im.repeat(3, 1, 1)
-        else:
-            raise
+            im = record["image"].unsqueeze(0).repeat(3, 1, 1)  # Add channels
+        else:  # Flat tensor or invalid shape
+            flat_size = record["image"].numel()
+            edge = int(flat_size**0.5)
+            if edge * edge == flat_size:  # Is it a square image?
+                im = record["image"].reshape(1, edge, edge).repeat(3, 1, 1)
+            else:
+                raise ValueError(f"Cannot reshape image of size {flat_size}")
 
         im = feature_extractor(im, return_tensors="pt")["pixel_values"]
         new_batch.append(
