@@ -10,7 +10,14 @@ import flor
 
 # Device configuration
 device = torch.device(
-    flor.arg("device", default="cuda" if torch.cuda.is_available() else "cpu")
+    flor.arg(
+        "device",
+        (
+            "mps"
+            if torch.backends.mps.is_available()
+            else "cuda" if torch.cuda.is_available() else "cpu"
+        ),
+    )
 )
 
 # Hyper-parameters
@@ -25,7 +32,6 @@ assert set(data.keys()) == {"train", "validation", "test"}  # type: ignore
 
 feature_extractor = AutoFeatureExtractor.from_pretrained("microsoft/resnet-152")
 model = ResNetForImageClassification.from_pretrained("microsoft/resnet-152").to(device)  # type: ignore
-Flor.checkpoints(model)
 
 
 def my_collate(batch):
@@ -61,36 +67,40 @@ test_loader = torchdata.DataLoader(dataset=data["test"].with_format("torch"), ba
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-Flor.checkpoints(optimizer)
 
 # Train the model
 total_step = len(train_loader)
 print(total_step)
 
-for epoch in Flor.loop(range(num_epochs)):
-    model.train()
-    for i, batch in Flor.loop(enumerate(train_loader)):
-        # Move tensors to the configured device
-        images = batch["image"].to(device)
-        labels = batch["label"].to(device)
+with flor.checkpointing(model=model, optimizer=optimizer):
+    for epoch in flor.loop("epoch", range(num_epochs)):
+        model.train()
+        for i, batch in flor.loop("step", enumerate(train_loader)):
+            # Move tensors to the configured device
+            images = batch["image"].to(device)
+            labels = batch["label"].to(device)
 
-        # Forward pass
-        outputs = model(images)
-        loss = criterion(outputs.logits, labels)
+            # Forward pass
+            outputs = model(images)
+            loss = criterion(outputs.logits, labels)
 
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        if i % 100 == 0:
-            print(
-                "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
-                    epoch + 1, num_epochs, i, total_step, flor.log("loss", loss.item())
+            if i % 100 == 0:
+                print(
+                    "Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}".format(
+                        epoch + 1,
+                        num_epochs,
+                        i,
+                        total_step,
+                        flor.log("loss", loss.item()),
+                    )
                 )
-            )
-        if i >= flor.arg("step_cap", 20000):
-            break
+            if i >= flor.arg("step_cap", 20000):
+                break
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -118,5 +128,5 @@ with torch.no_grad():
             break
 
     print(
-        f"Accuracy of the network on the {len(val_loader) * batch_size} test images: {flor.log('acc', 100 * correct / total)}"
+        f"Accuracy of the network on the {len(val_loader) * batch_size} test images: {flor.log('test_acc', 100 * correct / total)}"
     )
