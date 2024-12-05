@@ -1,0 +1,11 @@
+datasets
+torch
+torchvision
+transformers
+numpy
+pillow
+tqdm
+matplotlib
+tensorboard
+opencv-python
+flordb
